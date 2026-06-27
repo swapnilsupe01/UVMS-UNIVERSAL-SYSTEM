@@ -54,3 +54,41 @@ http://127.0.0.1:8000/web
 ---
 
 ## 📁 Project Structure
+UVMS-UNIVERSAL SYSTEM/
+
+├── main.py                  # FastAPI app entry point
+
+├── models/
+
+│   ├── detector.py          # YOLOv8 multi-detector
+
+│   ├── depth.py             # MiDaS depth estimator
+
+│   ├── building_detector.py # TF Hub building model
+
+│   ├── road_damage.py       # Pothole & crack detector
+
+│   └── wildlife.py          # Wildlife classifier
+
+├── routes/
+
+│   ├── building.py
+
+│   ├── furniture.py
+
+│   └── waste.py
+
+├── templates/
+
+│   ├── index.html
+
+│   └── app1.html
+
+└── utils/
+
+└── image.py
+
+
+
+
+![UVMS Screenshot](Screenshot.png)
