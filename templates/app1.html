@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UVMS — Scanner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:       #2563eb;
+      --blue-dark:  #1d4ed8;
+      --blue-light: #eff6ff;
+      --text:       #0f172a;
+      --muted:      #64748b;
+      --border:     #e2e8f0;
+      --white:      #ffffff;
+      --success:    #16a34a;
+      --error:      #dc2626;
+      --grid-color: rgba(37,99,235,0.07);
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--white);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none; z-index: 0;
+    }
+
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.9);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 48px; height: 68px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.25rem;
+      color: var(--text); text-decoration: none;
+    }
+    .logo-icon {
+      width: 36px; height: 36px; background: var(--blue);
+      border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; color: white;
+    }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-links a {
+      padding: 8px 18px; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 500;
+      text-decoration: none; color: var(--text); transition: background 0.2s;
+    }
+    .nav-links a:hover { background: var(--blue-light); color: var(--blue); }
+    .nav-links a.active { background: var(--blue); color: white; }
+
+    .container {
+      position: relative; z-index: 1;
+      max-width: 1280px; margin: 0 auto;
+      padding: 40px 48px;
+    }
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.8rem; font-weight: 800; margin-bottom: 4px;
+    }
+    .page-sub { font-size: 0.9rem; color: var(--muted); margin-bottom: 32px; }
+
+    .api-bar {
+      background: white; border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 18px 22px;
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 28px;
+    }
+    .api-label { font-size: 0.85rem; font-weight: 600; white-space: nowrap; }
+    .api-input {
+      flex: 1; border: 1.5px solid var(--border); border-radius: 8px;
+      padding: 9px 14px; font-size: 0.875rem; font-family: 'DM Sans', sans-serif;
+      outline: none; transition: border-color 0.2s;
+    }
+    .api-input:focus { border-color: var(--blue); }
+    .api-status {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 0.8rem; font-weight: 500; white-space: nowrap;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #94a3b8; }
+    .dot.online  { background: var(--success); }
+    .dot.offline { background: var(--error); }
+    .btn-check {
+      background: var(--blue); color: white;
+      border: none; border-radius: 8px;
+      padding: 9px 18px; font-size: 0.85rem; font-weight: 500;
+      cursor: pointer; transition: background 0.2s; white-space: nowrap;
+    }
+    .btn-check:hover { background: var(--blue-dark); }
+
+    .main-grid {
+      display: grid; grid-template-columns: 380px 1fr; gap: 24px;
+    }
+    .left-panel { display: flex; flex-direction: column; gap: 20px; }
+
+    .card {
+      background: white; border: 1.5px solid var(--border);
+      border-radius: 16px; overflow: hidden;
+    }
+    .card-head {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .card-head-icon {
+      width: 32px; height: 32px; background: var(--blue-light);
+      border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; font-size: 0.9rem;
+    }
+    .card-head h3 { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; }
+    .card-body { padding: 20px; }
+
+    .dropzone {
+      border: 2px dashed var(--border); border-radius: 12px;
+      padding: 32px 20px; text-align: center; cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .dropzone:hover, .dropzone.drag { border-color: var(--blue); background: var(--blue-light); }
+    .dropzone-icon { font-size: 2rem; margin-bottom: 10px; }
+    .dropzone h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 4px; }
+    .dropzone p  { font-size: 0.8rem; color: var(--muted); }
+    #fileInput { display: none; }
+
+    .preview-wrap { position: relative; }
+    .preview-wrap img {
+      width: 100%; border-radius: 10px;
+      display: block; max-height: 220px; object-fit: cover;
+    }
+    .preview-clear {
+      position: absolute; top: 8px; right: 8px;
+      background: rgba(0,0,0,0.55); color: white;
+      border: none; border-radius: 6px; padding: 4px 10px;
+      font-size: 0.75rem; cursor: pointer;
+    }
+
+    .mode-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    .mode-btn {
+      padding: 10px 6px; border-radius: 10px;
+      border: 1.5px solid var(--border); background: white;
+      font-size: 0.78rem; font-weight: 500; text-align: center;
+      cursor: pointer; transition: all 0.15s;
+    }
+    .mode-btn .mi { font-size: 1.1rem; display: block; margin-bottom: 4px; }
+    .mode-btn:hover { border-color: var(--blue); background: var(--blue-light); }
+    .mode-btn.selected { border-color: var(--blue); background: var(--blue); color: white; }
+
+    .mode-hint {
+      margin-top: 10px; padding: 8px 12px;
+      background: var(--blue-light); border-radius: 8px;
+      font-size: 0.78rem; color: var(--blue); font-weight: 500;
+    }
+
+    .conf-row {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 8px;
+    }
+    .conf-row label { font-size: 0.85rem; font-weight: 500; }
+    .conf-val {
+      font-size: 0.85rem; font-weight: 700; color: var(--blue);
+      background: var(--blue-light); padding: 2px 10px; border-radius: 6px;
+    }
+    input[type=range] { width: 100%; accent-color: var(--blue); height: 4px; }
+
+    .run-btn {
+      width: 100%; padding: 14px; background: var(--blue);
+      color: white; border: none; border-radius: 10px;
+      font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700;
+      cursor: pointer; transition: background 0.2s, transform 0.15s;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .run-btn:hover:not(:disabled) { background: var(--blue-dark); transform: translateY(-1px); }
+    .run-btn:disabled { background: #93c5fd; cursor: not-allowed; transform: none; }
+
+    .right-panel { display: flex; flex-direction: column; gap: 20px; }
+
+    .img-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .img-box label {
+      display: block; font-size: 0.78rem; font-weight: 600;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 8px;
+    }
+    .img-box img {
+      width: 100%; border-radius: 12px;
+      border: 1.5px solid var(--border); display: block;
+    }
+
+    .det-table { width: 100%; border-collapse: collapse; }
+    .det-table th {
+      text-align: left; font-size: 0.75rem; font-weight: 600;
+      color: var(--muted); text-transform: uppercase;
+      letter-spacing: 0.05em; padding: 8px 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .det-table td {
+      padding: 10px 12px; font-size: 0.85rem;
+      border-bottom: 1px solid #f1f5f9; vertical-align: middle;
+    }
+    .det-table tr:last-child td { border-bottom: none; }
+    .det-table tr:hover td { background: var(--blue-light); }
+
+    .label-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      background: var(--blue-light); color: var(--blue);
+      font-size: 0.78rem; font-weight: 600;
+      padding: 3px 10px; border-radius: 100px;
+    }
+    .badge {
+      display: inline-block; font-size: 0.75rem; font-weight: 700;
+      padding: 2px 8px; border-radius: 100px;
+    }
+    .badge-red    { background:#fee2e2; color:#dc2626; }
+    .badge-yellow { background:#fef9c3; color:#854d0e; }
+    .badge-green  { background:#dcfce7; color:#16a34a; }
+
+    .conf-bar-wrap { display: flex; align-items: center; gap: 8px; }
+    .conf-bar {
+      flex: 1; height: 6px; background: #f1f5f9;
+      border-radius: 100px; overflow: hidden;
+    }
+    .conf-bar-fill { height: 100%; background: var(--blue); border-radius: 100px; }
+
+    .empty-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 60px 20px; color: var(--muted); text-align: center; gap: 12px;
+    }
+    .empty-state .ei { font-size: 2.5rem; }
+    .empty-state h4  { font-size: 0.95rem; font-weight: 600; }
+    .empty-state p   { font-size: 0.82rem; }
+
+    .spinner {
+      width: 28px; height: 28px; border: 3px solid #bfdbfe;
+      border-top-color: var(--blue); border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .error-banner {
+      background: #fef2f2; border: 1px solid #fecaca;
+      border-radius: 10px; padding: 12px 16px;
+      color: var(--error); font-size: 0.85rem; display: none;
+    }
+    .error-banner.show { display: block; }
+
+    .summary-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+    .pill {
+      background: var(--blue-light); color: var(--blue);
+      border-radius: 100px; padding: 5px 14px;
+      font-size: 0.8rem; font-weight: 600;
+    }
+    .pill.green  { background: #dcfce7; color: var(--success); }
+    .pill.red    { background: #fee2e2; color: var(--error); }
+    .pill.yellow { background: #fef9c3; color: #854d0e; }
+
+    @media (max-width: 1000px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .container { padding: 24px; }
+      nav { padding: 0 24px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/web" class="logo">
+    <div class="logo-icon">🔭</div>
+    UVMS
+  </a>
+  <div class="nav-links">
+    <a href="/web">Home</a>
+    <a href="/app" class="active">Scanner</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="page-title">🔬 Vision Scanner</div>
+  <div class="page-sub">Upload an image · choose a mode · run AI analysis</div>
+
+  <!-- API BAR -->
+  <div class="api-bar">
+    <span class="api-label">🔗 API URL</span>
+    <input class="api-input" id="apiUrl" type="text"
+      value="http://127.0.0.1:8000"
+      placeholder="https://xxxx.trycloudflare.com"/>
+    <button class="btn-check" onclick="checkHealth()">Check</button>
+    <div class="api-status">
+      <div class="dot" id="statusDot"></div>
+      <span id="statusText">Not checked</span>
+    </div>
+  </div>
+
+  <div class="error-banner" id="errorBanner"></div>
+
+  <div class="main-grid">
+
+    <!-- LEFT -->
+    <div class="left-panel">
+
+      <!-- Upload -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon">📁</div>
+          <h3>Upload Image</h3>
+        </div>
+        <div class="card-body">
+          <div id="dropzone" class="dropzone"
+            onclick="document.getElementById('fileInput').click()"
+            ondragover="event.preventDefault();this.classList.add('drag')"
+            ondragleave="this.classList.remove('drag')"
+            ondrop="handleDrop(event)">
+            <div class="dropzone-icon">🖼️</div>
+            <h4>Click or drag to upload</h4>
+            <p>JPG, PNG, WEBP supported</p>
+          </div>
+          <div id="previewWrap" class="preview-wrap" style="display:none;margin-top:12px;">
+            <img id="previewImg" src="" alt="preview"/>
+            <button class="preview-clear" onclick="clearImage()">✕ Clear</button>
+          </div>
+          <input type="file" id="fileInput" accept="image/*"
+            onchange="handleFile(this.files[0])"/>
+        </div>
+      </div>
+
+      <!-- Mode -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon">⚙️</div>
+          <h3>Analysis Mode</h3>
+        </div>
+        <div class="card-body">
+
+          <div class="mode-grid">
+            <div class="mode-btn selected" onclick="setMode('detect',this)"
+                 title="Detect cars, buses, trucks, motorcycles">
+              <span class="mi">🚗</span>Vehicles
+            </div>
+            <div class="mode-btn" onclick="setMode('furniture',this)"
+                 title="Detect chairs, sofas, tables, beds">
+              <span class="mi">🛋️</span>Furniture
+            </div>
+            <div class="mode-btn" onclick="setMode('waste',this)"
+                 title="Detect waste items and recyclability">
+              <span class="mi">♻️</span>Waste
+            </div>
+            <div class="mode-btn" onclick="setMode('buildings',this)"
+                 title="Detect buildings, houses, skyscrapers">
+              <span class="mi">🏢</span>Buildings
+            </div>
+            <div class="mode-btn" onclick="setMode('wildlife',this)"
+                 title="Detect animals and birds by group">
+              <span class="mi">🦁</span>Wildlife
+            </div>
+            <div class="mode-btn" onclick="setMode('road',this)"
+                 title="Detect potholes, cracks, road damage">
+              <span class="mi">🚧</span>Road Damage
+            </div>
+          </div>
+
+          <div class="mode-hint" id="modeHint">
+            🚗 Best for: street photos, parking lots, traffic scenes
+          </div>
+
+          <div style="margin-top:16px;" id="confSection">
+            <div class="conf-row">
+              <label>Confidence Threshold</label>
+              <span class="conf-val" id="confVal">40%</span>
+            </div>
+            <input type="range" min="10" max="95" value="40" id="confRange"
+              oninput="document.getElementById('confVal').textContent=this.value+'%'"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Run -->
+      <button class="run-btn" id="runBtn" onclick="runAnalysis()" disabled>
+        <span id="runIcon">🚀</span>
+        <span id="runText">Run Analysis</span>
+      </button>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-panel">
+
+      <!-- Visual results -->
+      <div class="card">
+        <div class="card-head">
+          <div class="card-head-icon">🖼️</div>
+          <h3>Visual Results</h3>
+        </div>
+        <div class="card-body">
+          <div id="imgEmpty" class="empty-state">
+            <div class="ei">🔭</div>
+            <h4>No results yet</h4>
+            <p>Upload an image and run analysis</p>
+          </div>
+          <div id="imgResults" style="display:none;">
+            <div class="img-grid" id="imgGrid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Detections table -->
+      <div class="card" id="detCard" style="display:none;">
+        <div class="card-head">
+          <div class="card-head-icon">📋</div>
+          <h3 id="detCardTitle">Detected Objects</h3>
+        </div>
+        <div class="card-body">
+          <div class="summary-row" id="summaryRow"></div>
+          <div style="overflow-x:auto;">
+            <table class="det-table">
+              <thead id="detHead"></thead>
+              <tbody id="detBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  let selectedFile = null;
+  let selectedMode = 'detect';
+
+  const MODE_HINTS = {
+    detect:    '🚗 Best for: street photos, parking lots, traffic scenes',
+    furniture: '🛋️ Best for: room photos, interior shots, home images',
+    waste:     '♻️ Best for: trash bins, waste piles, recycling areas',
+    buildings: '🏢 Best for: city skylines, outdoor building photos',
+    wildlife:  '🦁 Best for: nature photos, zoos, farms, parks',
+    road:      '🚧 Best for: road surface photos, pavement, pothole images',
+  };
+
+  const MODE_HEADERS = {
+    detect:    ['#','Object','Confidence','Size (px)','Center','Clearance'],
+    furniture: ['#','Object','Confidence','Size (px)','Center',''],
+    waste:     ['#','Item','Confidence','Material','Recyclable','Score'],
+    buildings: ['#','Type','Confidence','Size (px)','Floors Est.',''],
+    wildlife:  ['#','Animal','Group','Confidence','Size (px)',''],
+    road:      ['#','Damage Type','Severity','Confidence','Size','Priority'],
+  };
+
+  // ── Size helper for road mode ─────────────────────────────────
+  // Handles new backend (width_cm/height_cm), old backend (est_width_m/est_height_m),
+  // and pixel fallback — without affecting any other mode.
+  function getSizeCm(det) {
+    if (det.width_cm !== undefined && det.height_cm !== undefined) {
+      return `${det.width_cm} × ${det.height_cm} cm`;
+    }
+    if (det.est_width_m !== undefined && det.est_height_m !== undefined) {
+      const w = Math.round(det.est_width_m * 100);
+      const h = Math.round(det.est_height_m * 100);
+      return `${w} × ${h} cm`;
+    }
+    if (det.width_px !== undefined) {
+      return `${det.width_px} × ${det.height_px} px`;
+    }
+    return 'unknown size';
+  }
+
+  // ── File handling ─────────────────────────────────────────────
+  function handleFile(file) {
+    if (!file) return;
+    selectedFile = file;
+    const reader = new FileReader();
+    reader.onload = e => {
+      document.getElementById('previewImg').src = e.target.result;
+      document.getElementById('dropzone').style.display    = 'none';
+      document.getElementById('previewWrap').style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+    updateRunBtn();
+  }
+
+  function handleDrop(e) {
+    e.preventDefault();
+    document.getElementById('dropzone').classList.remove('drag');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) handleFile(file);
+  }
+
+  function clearImage() {
+    selectedFile = null;
+    document.getElementById('previewImg').src = '';
+    document.getElementById('dropzone').style.display    = 'block';
+    document.getElementById('previewWrap').style.display = 'none';
+    document.getElementById('fileInput').value = '';
+    updateRunBtn();
+  }
+
+  // ── Mode ──────────────────────────────────────────────────────
+  function setMode(mode, el) {
+    selectedMode = mode;
+    document.querySelectorAll('.mode-btn')
+            .forEach(b => b.classList.remove('selected'));
+    el.classList.add('selected');
+    document.getElementById('modeHint').textContent =
+      MODE_HINTS[mode] || '';
+  }
+
+  // ── Health check ──────────────────────────────────────────────
+  async function checkHealth() {
+    const url  = getApiUrl();
+    const dot  = document.getElementById('statusDot');
+    const text = document.getElementById('statusText');
+    dot.className = 'dot'; text.textContent = 'Checking...';
+    try {
+      const r = await fetch(url + '/health');
+      const d = await r.json();
+      dot.className = 'dot online';
+      text.textContent = `Online · GPU: ${d.gpu ? '✅' : '❌'}`;
+      updateRunBtn(); hideError();
+    } catch {
+      dot.className = 'dot offline';
+      text.textContent = 'Offline / Error';
+    }
+  }
+
+  function getApiUrl() {
+    return document.getElementById('apiUrl').value.replace(/\/$/, '').trim();
+  }
+
+  function updateRunBtn() {
+    document.getElementById('runBtn').disabled =
+      !(selectedFile && getApiUrl());
+  }
+
+  document.getElementById('apiUrl').addEventListener('input', updateRunBtn);
+
+  // ── Run analysis ──────────────────────────────────────────────
+  async function runAnalysis() {
+    const url  = getApiUrl();
+    const conf = document.getElementById('confRange').value / 100;
+    if (!url || !selectedFile) return;
+
+    setLoading(true); hideError(); clearResults();
+
+    const form = new FormData();
+    form.append('file', selectedFile);
+
+    const endpoint = `${url}/${selectedMode}?confidence=${conf}`;
+
+    try {
+      const r = await fetch(endpoint, { method: 'POST', body: form });
+      if (!r.ok) throw new Error(`Server error ${r.status}`);
+      const data = await r.json();
+      renderResults(data);
+    } catch (err) {
+      showError('Request failed: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function setLoading(on) {
+    const btn  = document.getElementById('runBtn');
+    const icon = document.getElementById('runIcon');
+    const text = document.getElementById('runText');
+    if (on) {
+      btn.disabled = true;
+      icon.innerHTML = '<div class="spinner" style="width:20px;height:20px;border-width:2px;"></div>';
+      text.textContent = 'Analysing...';
+    } else {
+      btn.disabled = false;
+      icon.textContent = '🚀';
+      text.textContent = 'Run Analysis';
+    }
+  }
+
+  function clearResults() {
+    document.getElementById('imgEmpty').style.display   = 'flex';
+    document.getElementById('imgResults').style.display = 'none';
+    document.getElementById('detCard').style.display    = 'none';
+    document.getElementById('imgGrid').innerHTML        = '';
+    document.getElementById('detBody').innerHTML        = '';
+    document.getElementById('summaryRow').innerHTML     = '';
+  }
+
+  // ── Render results ────────────────────────────────────────────
+  function renderResults(data) {
+    const grid = document.getElementById('imgGrid');
+    grid.innerHTML = '';
+
+    if (data.annotated_image)
+      grid.innerHTML += imgBox('Detected Objects', data.annotated_image);
+    if (data.depth_image)
+      grid.innerHTML += imgBox('Depth Map', data.depth_image);
+    if (!data.annotated_image && !data.depth_image && data.original_image)
+      grid.innerHTML += imgBox('Original', data.original_image);
+
+    document.getElementById('imgEmpty').style.display   = 'none';
+    document.getElementById('imgResults').style.display = 'block';
+
+    const summary = document.getElementById('summaryRow');
+
+    if (selectedMode === 'road' && data.count !== undefined) {
+      summary.innerHTML =
+        `<span class="pill">${data.road_condition}</span>` +
+        `<span class="pill red">🔴 Urgent: ${data.urgent_count}</span>` +
+        `<span class="pill yellow">🟡 Monitor: ${data.monitor_count}</span>` +
+        `<span class="pill">📐 Damage area: ${data.total_damage_area_cm2} cm²</span>`;
+    } else if (selectedMode === 'wildlife' && data.count !== undefined) {
+      summary.innerHTML =
+        `<span class="pill">🦁 ${data.count} animal(s)</span>` +
+        Object.entries(data.by_group || {})
+          .map(([g,c]) => `<span class="pill green">${g}: ${c}</span>`).join('');
+    } else if (selectedMode === 'waste' && data.count !== undefined) {
+      summary.innerHTML =
+        `<span class="pill">♻️ ${data.recyclable_count} recyclable</span>` +
+        `<span class="pill red">🗑️ ${data.non_recyclable_count} non-recyclable</span>` +
+        `<span class="pill green">Rate: ${data.recyclability_rate}</span>`;
+    } else if (data.count !== undefined) {
+      summary.innerHTML =
+        `<span class="pill">🎯 ${data.count} found</span>` +
+        Object.entries(data.by_type || {})
+          .map(([l,c]) => `<span class="pill green">${l}: ${c}</span>`).join('');
+    }
+
+    if (data.detections && data.detections.length > 0) {
+      const headers = MODE_HEADERS[selectedMode] || MODE_HEADERS.detect;
+      document.getElementById('detHead').innerHTML =
+        '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+
+      document.getElementById('detBody').innerHTML =
+        data.detections.map((d, i) => buildRow(d, i)).join('');
+
+      document.getElementById('detCard').style.display = 'block';
+    }
+  }
+
+  function buildRow(d, i) {
+    // Confidence bar — used by ALL modes
+    const confPct = (d.confidence * 100).toFixed(0);
+    const conf = `
+      <div class="conf-bar-wrap">
+        <div class="conf-bar">
+          <div class="conf-bar-fill" style="width:${confPct}%"></div>
+        </div>
+        <span style="font-size:0.8rem;font-weight:600;color:var(--blue)">
+          ${confPct}%
+        </span>
+      </div>`;
+
+    // ── Road mode: uses getSizeCm() helper ─────────────────────
+    if (selectedMode === 'road') {
+      const sev      = d.severity || '';
+      const sevClass = sev.includes('HIGH') ? 'badge-red' : 'badge-yellow';
+      const pri      = d.repair_priority || '';
+      const priClass = pri === 'URGENT' ? 'badge-red' : 'badge-yellow';
+      const sizeStr  = getSizeCm(d);
+      const depthStr = d.depth_est_cm ? `<br><span style="color:var(--muted);font-size:0.78rem">depth ~${d.depth_est_cm} cm</span>` : '';
+
+      return `<tr>
+        <td style="color:var(--muted)">${i+1}</td>
+        <td><span class="label-chip">🚧 ${d.label}</span></td>
+        <td><span class="badge ${sevClass}">${sev}</span></td>
+        <td>${conf}</td>
+        <td style="font-family:monospace;font-size:0.82rem">${sizeStr}${depthStr}</td>
+        <td><span class="badge ${priClass}">${pri}</span></td>
+      </tr>`;
+    }
+
+    // ── Wildlife mode (unchanged) ──────────────────────────────
+    if (selectedMode === 'wildlife') {
+      return `<tr>
+        <td style="color:var(--muted)">${i+1}</td>
+        <td><span class="label-chip">🦁 ${d.label}</span></td>
+        <td><span class="pill green" style="font-size:0.75rem">${d.group}</span></td>
+        <td>${conf}</td>
+        <td style="font-family:monospace;font-size:0.82rem">
+          ${d.width_px}×${d.height_px}px
+        </td>
+        <td></td>
+      </tr>`;
+    }
+
+    // ── Waste mode (unchanged) ─────────────────────────────────
+    if (selectedMode === 'waste') {
+      const rec = d.recyclable
+        ? '<span class="badge badge-green">✅ Yes</span>'
+        : '<span class="badge badge-red">❌ No</span>';
+      return `<tr>
+        <td style="color:var(--muted)">${i+1}</td>
+        <td><span class="label-chip">♻️ ${d.label}</span></td>
+        <td>${conf}</td>
+        <td style="font-size:0.82rem">${d.material || '—'}</td>
+        <td>${rec}</td>
+        <td style="font-weight:700;color:var(--blue)">
+          ${((d.recyclability_score||0)*100).toFixed(0)}%
+        </td>
+      </tr>`;
+    }
+
+    // ── Default: vehicles, furniture, buildings (unchanged) ────
+    const clearance = d.ground_clearance_cm !== undefined
+      ? `<span class="badge badge-yellow">📏 ${d.ground_clearance_cm}cm</span>`
+      : '—';
+    return `<tr>
+      <td style="color:var(--muted)">${i+1}</td>
+      <td><span class="label-chip">🏷️ ${d.label}</span></td>
+      <td>${conf}</td>
+      <td style="font-family:monospace;font-size:0.82rem">
+        ${d.width_px}×${d.height_px}px
+      </td>
+      <td style="font-family:monospace;font-size:0.82rem">
+        ${d.center[0]},${d.center[1]}
+      </td>
+      <td>${clearance}</td>
+    </tr>`;
+  }
+
+  function imgBox(label, b64) {
+    return `
+      <div class="img-box">
+        <label>${label}</label>
+        <img src="data:image/jpeg;base64,${b64}" alt="${label}"/>
+      </div>`;
+  }
+
+  function showError(msg) {
+    const b = document.getElementById('errorBanner');
+    b.textContent = '⚠️ ' + msg;
+    b.classList.add('show');
+  }
+  function hideError() {
+    document.getElementById('errorBanner').classList.remove('show');
+  }
+</script>
+</body>
+</html>

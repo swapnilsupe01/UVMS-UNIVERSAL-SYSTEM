@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>UVMS — Urban Vision Measurement System</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue:       #2563eb;
+      --blue-dark:  #1d4ed8;
+      --blue-light: #eff6ff;
+      --text:       #0f172a;
+      --muted:      #64748b;
+      --border:     #e2e8f0;
+      --white:      #ffffff;
+      --grid-color: rgba(37,99,235,0.07);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--white);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* ── Grid background ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--grid-color) 1px, transparent 1px),
+        linear-gradient(90deg, var(--grid-color) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+      padding: 0 48px;
+      height: 68px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+
+    .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800; font-size: 1.25rem;
+      color: var(--text); text-decoration: none;
+    }
+    .logo-icon {
+      width: 36px; height: 36px; background: var(--blue);
+      border-radius: 8px; display: flex; align-items: center;
+      justify-content: center; color: white; font-size: 1rem;
+    }
+
+    .nav-links { display: flex; gap: 8px; }
+    .nav-links a {
+      padding: 8px 18px; border-radius: 8px;
+      font-size: 0.9rem; font-weight: 500;
+      text-decoration: none; color: var(--text);
+      transition: background 0.2s;
+    }
+    .nav-links a:hover { background: var(--blue-light); color: var(--blue); }
+    .nav-links a.active { background: var(--blue); color: white; }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative; z-index: 1;
+      min-height: calc(100vh - 68px);
+      display: grid; grid-template-columns: 1fr 1fr;
+      align-items: center; gap: 60px;
+      padding: 80px 80px 60px;
+      max-width: 1280px; margin: 0 auto;
+    }
+
+    .hero-badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--blue-light); color: var(--blue);
+      font-size: 0.8rem; font-weight: 500;
+      padding: 6px 14px; border-radius: 100px;
+      border: 1px solid #bfdbfe;
+      margin-bottom: 24px;
+    }
+    .hero-badge span { width: 6px; height: 6px; background: var(--blue); border-radius: 50%; }
+
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.4rem, 4vw, 3.6rem);
+      font-weight: 800; line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    .hero h1 em { font-style: normal; color: var(--blue); }
+
+    .hero p {
+      font-size: 1.05rem; color: var(--muted);
+      line-height: 1.7; max-width: 480px;
+      margin-bottom: 36px;
+    }
+
+    .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--blue); color: white;
+      padding: 14px 28px; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 500;
+      text-decoration: none; transition: background 0.2s, transform 0.15s;
+      border: none; cursor: pointer;
+    }
+    .btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
+
+    .btn-outline {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: transparent; color: var(--text);
+      padding: 14px 28px; border-radius: 10px;
+      font-size: 0.95rem; font-weight: 500;
+      text-decoration: none; border: 1.5px solid var(--border);
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .btn-outline:hover { border-color: var(--blue); background: var(--blue-light); color: var(--blue); }
+
+    /* ── HERO CARD ── */
+    .hero-card {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 20px;
+      box-shadow: 0 8px 40px rgba(37,99,235,0.10);
+      overflow: hidden;
+      animation: floatCard 4s ease-in-out infinite;
+    }
+    @keyframes floatCard {
+      0%,100% { transform: translateY(0); }
+      50%      { transform: translateY(-10px); }
+    }
+
+    .card-header {
+      padding: 18px 22px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 12px;
+    }
+    .card-icon {
+      width: 40px; height: 40px; background: var(--blue-light);
+      border-radius: 10px; display: flex; align-items: center;
+      justify-content: center; font-size: 1.1rem;
+    }
+    .card-header-text h3 { font-family: 'Syne', sans-serif; font-size: 1rem; font-weight: 700; }
+    .card-header-text p  { font-size: 0.8rem; color: var(--muted); }
+
+    .card-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+    .card-item {
+      padding: 22px;
+      border-right: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .card-item:hover { background: var(--blue-light); }
+    .card-item:nth-child(even) { border-right: none; }
+    .card-item:nth-last-child(-n+2) { border-bottom: none; }
+
+    .ci-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; margin-bottom: 10px;
+    }
+    .ci-blue   { background: #dbeafe; }
+    .ci-red    { background: #fee2e2; }
+    .ci-green  { background: #dcfce7; }
+    .ci-yellow { background: #fef9c3; }
+    .ci-purple { background: #ede9fe; }
+    .ci-plus   { background: #f1f5f9; }
+
+    .card-item h4 { font-size: 0.9rem; font-weight: 600; margin-bottom: 2px; }
+    .card-item p  { font-size: 0.75rem; color: var(--muted); }
+
+    .card-insight {
+      padding: 16px 22px;
+      background: #f8fafc;
+      border-top: 1px solid var(--border);
+      display: flex; gap: 10px; align-items: flex-start;
+    }
+    .insight-dot { font-size: 0.9rem; margin-top: 1px; }
+    .card-insight p { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
+    .card-insight strong { color: var(--blue); }
+
+    /* ── FEATURES ── */
+    .features {
+      position: relative; z-index: 1;
+      padding: 80px 80px;
+      max-width: 1280px; margin: 0 auto;
+    }
+    .section-label {
+      font-size: 0.8rem; font-weight: 600; letter-spacing: 0.1em;
+      text-transform: uppercase; color: var(--blue);
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 3vw, 2.4rem);
+      font-weight: 800; margin-bottom: 48px;
+    }
+
+    .features-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    }
+    .feature-card {
+      background: white;
+      border: 1.5px solid var(--border);
+      border-radius: 16px; padding: 28px;
+      transition: box-shadow 0.2s, transform 0.2s;
+    }
+    .feature-card:hover {
+      box-shadow: 0 8px 32px rgba(37,99,235,0.12);
+      transform: translateY(-3px);
+    }
+    .feat-icon {
+      width: 48px; height: 48px; background: var(--blue-light);
+      border-radius: 12px; display: flex; align-items: center;
+      justify-content: center; font-size: 1.4rem; margin-bottom: 16px;
+    }
+    .feature-card h3 {
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem; font-weight: 700; margin-bottom: 8px;
+    }
+    .feature-card p { font-size: 0.875rem; color: var(--muted); line-height: 1.6; }
+
+    /* ── STATS ── */
+    .stats {
+      position: relative; z-index: 1;
+      background: var(--blue);
+      padding: 60px 80px;
+      display: grid; grid-template-columns: repeat(4,1fr);
+      gap: 40px; text-align: center;
+    }
+    .stat h2 {
+      font-family: 'Syne', sans-serif;
+      font-size: 2.4rem; font-weight: 800; color: white;
+    }
+    .stat p { font-size: 0.875rem; color: rgba(255,255,255,0.75); margin-top: 4px; }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative; z-index: 1;
+      padding: 32px 80px;
+      border-top: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 0.85rem; color: var(--muted);
+    }
+
+    /* ── FADE IN ── */
+    .fade-in {
+      opacity: 0; transform: translateY(24px);
+      animation: fadeIn 0.7s ease forwards;
+    }
+    .fade-in:nth-child(1) { animation-delay: 0.1s; }
+    .fade-in:nth-child(2) { animation-delay: 0.2s; }
+    .fade-in:nth-child(3) { animation-delay: 0.3s; }
+    @keyframes fadeIn {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 900px) {
+      .hero { grid-template-columns: 1fr; padding: 48px 32px; }
+      .features { padding: 48px 32px; }
+      .features-grid { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: 1fr 1fr; padding: 40px 32px; }
+      nav { padding: 0 24px; }
+      footer { flex-direction: column; gap: 12px; padding: 24px 32px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="/web" class="logo">
+    <div class="logo-icon">🔭</div>
+    UVMS
+  </a>
+  <div class="nav-links">
+    <a href="/web" class="active">Home</a>
+    <a href="/app">Scanner</a>
+    <a href="#features">Features</a>
+    <a href="#about">About</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div>
+    <div class="hero-badge fade-in"><span></span> AI-Powered Vision System</div>
+    <h1 class="fade-in">
+      Detect, measure,<br/>
+      and <em>understand</em><br/>
+      the urban world
+    </h1>
+    <p class="fade-in">
+      UVMS uses YOLOv8 object detection and MiDaS depth estimation
+      to identify objects, measure real-world dimensions, and estimate
+      distances — all from a single image.
+    </p>
+    <div class="hero-btns fade-in">
+      <a href="/app" class="btn-primary">🚀 Open Scanner</a>
+      <a href="#features" class="btn-outline">Learn More →</a>
+    </div>
+  </div>
+
+  <div class="hero-card">
+    <div class="card-header">
+      <div class="card-icon">📊</div>
+      <div class="card-header-text">
+        <h3>Vision Vault</h3>
+        <p>All detections in one place</p>
+      </div>
+    </div>
+    <div class="card-grid">
+      <div class="card-item">
+        <div class="ci-icon ci-blue">🎯</div>
+        <h4>Object Detection</h4>
+        <p>YOLOv8-Large · 600+ classes</p>
+      </div>
+      <div class="card-item">
+        <div class="ci-icon ci-red">📏</div>
+        <h4>Depth Estimation</h4>
+        <p>MiDaS · Per pixel</p>
+      </div>
+      <div class="card-item">
+        <div class="ci-icon ci-green">🛣️</div>
+        <h4>Road Damage</h4>
+        <p>Pothole · Crack · Severity</p>
+      </div>
+      <div class="card-item">
+        <div class="ci-icon ci-yellow">🦁</div>
+        <h4>Wildlife</h4>
+        <p>Animals · Birds · Groups</p>
+      </div>
+      <div class="card-item">
+        <div class="ci-icon ci-purple">🏢</div>
+        <h4>Buildings</h4>
+        <p>Structures · Floor count</p>
+      </div>
+      <div class="card-item">
+        <div class="ci-icon ci-plus">⚡</div>
+        <h4>Full Analysis</h4>
+        <p>Detection + Depth</p>
+      </div>
+    </div>
+    <div class="card-insight">
+      <span class="insight-dot">⚡</span>
+      <p><strong>AI Insight:</strong> Tesla T4 GPU active — 9 endpoints, inference under 2s per image.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section class="features" id="features">
+  <div class="section-label">Capabilities</div>
+  <h2 class="section-title">Everything in one scan</h2>
+  <div class="features-grid">
+
+    <div class="feature-card">
+      <div class="feat-icon">🎯</div>
+      <h3>Object Detection</h3>
+      <p>Identifies 600+ object classes including cars, people, furniture, animals and more using YOLOv8-Large with confidence scores and bounding boxes.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feat-icon">🌊</div>
+      <h3>Depth Estimation</h3>
+      <p>Generates a per-pixel depth map using Intel MiDaS — visualized as a colorized heatmap showing near and far regions of any scene.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feat-icon">📐</div>
+      <h3>Real-World Measurements</h3>
+      <p>Estimates actual width, height, and ground clearance of detected objects by combining bounding box size with MiDaS depth values.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feat-icon">🚗</div>
+      <h3>Vehicle Analysis</h3>
+      <p>Detects cars, trucks, buses and motorcycles. Estimates ground clearance in cm using depth data — useful for road and parking analysis.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feat-icon">🛣️</div>
+      <h3>Road Damage Detection</h3>
+      <p>Detects potholes, alligator cracks, longitudinal and transverse cracks. Rates severity as Critical, Urgent, Moderate or Minor with repair priority.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feat-icon">🦁</div>
+      <h3>Wildlife Detection</h3>
+      <p>Identifies animals and birds across 20+ species. Groups detections into pets, farm animals, wild animals and birds for easy classification.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feat-icon">🏢</div>
+      <h3>Building Detection</h3>
+      <p>Detects buildings, skyscrapers, bridges, churches and more using TensorFlow SSD trained on Open Images. Estimates floor count from height.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feat-icon">🏠</div>
+      <h3>Interior & Furniture</h3>
+      <p>Recognizes chairs, couches, beds, tables, wardrobes and more — useful for home, office and building interior scans and inventory.</p>
+    </div>
+
+    <div class="feature-card">
+      <div class="feat-icon">⚡</div>
+      <h3>GPU Accelerated</h3>
+      <p>Runs on Tesla T4 GPU via Google Colab — fast inference across all 9 endpoints, exposed publicly via Cloudflare tunnel.</p>
+    </div>
+
+  </div>
+</section>
+
+<!-- STATS — all corrected -->
+<div class="stats">
+  <div class="stat"><h2>600+</h2><p>Object Classes</p></div>
+  <div class="stat"><h2>&lt;2s</h2><p>Inference Time (GPU)</p></div>
+  <div class="stat"><h2>9</h2><p>API Endpoints</p></div>
+  <div class="stat"><h2>100%</h2><p>Free to Run</p></div>
+</div>
+
+<!-- FOOTER -->
+<footer id="about">
+  <span>🔭 <strong>UVMS</strong> — Urban Vision Measurement System</span>
+  <span>Built with YOLOv8 · MiDaS · TensorFlow · FastAPI · Cloudflare</span>
+</footer>
+
+</body>
+</html>
