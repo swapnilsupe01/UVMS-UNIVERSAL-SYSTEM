@@ -1,4 +1,4 @@
-# 🏙️ UVMS — Urban Vision Measurement System
+# 🏙️ UVMS — Universal Vision Measurement System
 
 > **Everything in one scan** — A multi-purpose AI vision platform that analyzes 
 > images using state-of-the-art computer vision models.
